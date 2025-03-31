@@ -1,0 +1,141 @@
+services:
+  user:
+    restart: always
+    container_name: user
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbUser:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8082
+    ports:
+      - '8083:8082'
+    depends_on:
+      - dbUser
+    networks:
+      - network_user
+      - network_api_gateway
+
+  dbUser:
+    image: postgres:latest
+    restart: always
+    container_name: dbUser
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - '5433:5432'
+    networks:
+      - network_user
+
+  booking:
+    restart: always
+    container_name: booking
+    build:
+      context: ./booking
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbBooking:5432/bookingdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8082
+    ports:
+      - '8084:8082'
+    depends_on:
+      - dbBooking
+    networks:
+      - network_bookings
+      - network_api_gateway
+
+  dbBooking:
+    image: postgres:latest
+    restart: always
+    container_name: dbBooking
+    environment:
+      POSTGRES_DB: bookingdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - '5434:5432'
+    networks:
+      - network_bookings
+
+  room:
+    restart: always
+    container_name: room
+    build:
+      context: ./room
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbRoom:5432/roomdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8082
+    ports:
+      - '8085:8082'
+    depends_on:
+      - dbRoom
+    networks:
+      - network_rooms
+      - network_api_gateway
+
+  dbRoom:
+    image: postgres:latest
+    restart: always
+    container_name: dbRoom
+    environment:
+      POSTGRES_DB: roomdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - '5435:5432'
+    networks:
+      - network_rooms
+
+  adminer:
+    container_name: adminerMicro
+    restart: always
+    image: adminer:latest
+    ports:
+      - '8089:8080'
+    networks:
+      - network_user
+      - network_bookings
+      - network_rooms
+    
+  web:
+    image: nginx:latest
+    volumes:
+      - ./application/src:/usr/share/nginx/html
+    ports:
+      - "3000:80"
+    networks:
+      - network_api_gateway
+
+networks:
+  network_user:
+    driver: bridge
+  network_bookings:
+    driver: bridge
+  network_rooms:
+    driver: bridge
+  network_api_gateway:
+    driver: bridge
